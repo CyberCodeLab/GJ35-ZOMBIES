@@ -1,18 +1,28 @@
--- Switch off buffering mode for an output file.(The result of any output operation appears immediately) | They are two other mode: "full" or "line"
-io.stdout:setvbuf("no")
+----------------------------
+-- Create by CyberCodeLab --
+----------- For ------------
+----- Game Codeur Scool ----
+----------------------------
 
 -- Filtering images for pixel perfect. (The FilterMode is Linear by default)
 love.graphics.setDefaultFilter("nearest")
 
-
 function love.load()
-    love.window.setTitle("ZOMBIES 2022 by CyberCodeLab")
+
 end
 
 function love.update(dt)
+
+    -- limited deltatime
+    dt = math.min(dt, 1/60)
+
     print(dt)
 end
 
 function love.draw()
-    love.graphics.print("Hello World", 400, 300)
+    love.graphics.print("Hello World", 25, 25)
+end
+
+function love.keypressed(key)
+
 end
