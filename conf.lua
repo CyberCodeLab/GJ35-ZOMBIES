@@ -14,16 +14,21 @@ end
 io.stdout:setvbuf("no")
 
 -- Indicate my config
-function love.conf(c)
+function love.conf(t)
 
     -- Windows settings
-    c.window.title = "ZOMBIES 2022 by CyberCodeLab"
-    c.window.width = 1280
-    c.window.height = 720
+    t.window.title = "ZOMBIES 2022 by CyberCodeLab"
+    t.window.icon = "assets/zombie_icon.png"
+    t.window.width = 800
+    t.window.height = 600
+    t.window.resizable = true
+    t.window.fullscreen = false
+    t.window.vsync  = true
+    t.window.minwidth = 800
+    t.window.minheight = 600
 
-    c.window.fullscreen = false
-    c.window.vsync  = true
-    c.window.minwidth = 800
-    c.window.minheight = 600
+    -- Log
+    t.version = "11.4.0"
+    t.console = false
 
 end

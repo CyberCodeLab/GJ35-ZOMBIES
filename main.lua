@@ -4,33 +4,70 @@
 ----- GAMECODEUR SCHOOL ----
 ----------------------------
 
--- Filtering images for pixel perfect. (The FilterMode is Linear by default)
-love.graphics.setDefaultFilter("nearest")
+
+--[[
+██████  ███████  ██████  ██    ██ ██ ██████  ███████ ██████  
+██   ██ ██      ██    ██ ██    ██ ██ ██   ██ ██      ██   ██ 
+██████  █████   ██    ██ ██    ██ ██ ██████  █████   ██   ██ 
+██   ██ ██      ██ ▄▄ ██ ██    ██ ██ ██   ██ ██      ██   ██ 
+██   ██ ███████  ██████   ██████  ██ ██   ██ ███████ ██████  
+]]
+
+
+player = require 'player'
+
+
+--[[
+██       ██████  ██    ██ ███████     ███████ ██    ██ ███    ██  ██████ 
+██      ██    ██ ██    ██ ██          ██      ██    ██ ████   ██ ██      
+██      ██    ██ ██    ██ █████       █████   ██    ██ ██ ██  ██ ██      
+██      ██    ██  ██  ██  ██          ██      ██    ██ ██  ██ ██ ██      
+███████  ██████    ████   ███████     ██       ██████  ██   ████  ██████ 
+]]
+
 
 function love.load()
 
-    print("load...")
-	math.randomseed(os.time())
+    -- Filtering images for pixel perfect. (The FilterMode is Linear by default)
+    love.graphics.setDefaultFilter("nearest")
+
+    WIDTH = love.graphics.getWidth()
+    HEIGHT = love.graphics.getHeight()
 
 end
+
+
 
 function love.update(dt)
 
     -- limited deltatime
-    dt = math.min(dt, 1/60)
-
+    local fps = 60
+    dt = math.min(dt, 1/fps)
     print(dt)
+
+    CheckPlayerInputs(dt)
+
 end
 
--- Scale render
-local sx,sy = 2,2
+
 
 function love.draw()
 
-    love.graphics.scale(sx, sy);
-    love.graphics.print("Hello World", 25, 25)
+    -- PARAMETERS
+    local sxy = 2 -- scale
+    love.graphics.scale(sxy, sxy)
+    love.graphics.setBackgroundColor(BGColor())
+
+    -- PLAYER
+    --love.graphics.draw(player.img, player.posX, player.posY, nil, 0.1)
+    love.graphics.rectangle("fill", player.posX, player.posY, player.size, player.size)
+
+    -- TEXT
+    love.graphics.print("Score = 10", WIDTH/4, 5)
+    DebugLoveVersionInfo()
 
 end
+
 
 function love.keypressed(key)
 
@@ -41,4 +78,61 @@ function love.keypressed(key)
         return
     end
 
+end
+
+
+--[[
+██ ███    ██ ██████  ██    ██ ████████ 
+██ ████   ██ ██   ██ ██    ██    ██    
+██ ██ ██  ██ ██████  ██    ██    ██    
+██ ██  ██ ██ ██      ██    ██    ██    
+██ ██   ████ ██       ██████     ██    
+]]
+
+
+function CheckPlayerInputs(dt)
+    if love.keyboard.isDown("right") then
+        player.posX = player.posX + player.speed * dt
+    elseif love.keyboard.isDown("left") then
+        player.posX = player.posX - player.speed * dt
+    elseif love.keyboard.isDown("up") then
+        player.posY = player.posY - player.speed * dt
+    elseif love.keyboard.isDown("down") then
+        player.posY = player.posY + player.speed * dt
+    end
+end
+
+--[[
+██    ██ ████████ ██ ██      ██ ████████ ██ ███████ ███████ 
+██    ██    ██    ██ ██      ██    ██    ██ ██      ██      
+██    ██    ██    ██ ██      ██    ██    ██ █████   ███████ 
+██    ██    ██    ██ ██      ██    ██    ██ ██           ██ 
+ ██████     ██    ██ ███████ ██    ██    ██ ███████ ███████ 
+]]
+
+
+function BGColor()
+    red = 115/255
+    green = 27/255
+    blue = 135/255
+    alpha = 50/100
+    color = { red, green, blue, alpha}
+    return color
+end
+
+
+--[[
+██████  ███████ ██████  ██    ██  ██████  
+██   ██ ██      ██   ██ ██    ██ ██       
+██   ██ █████   ██████  ██    ██ ██   ███ 
+██   ██ ██      ██   ██ ██    ██ ██    ██ 
+██████  ███████ ██████   ██████   ██████  
+]]
+
+
+function DebugLoveVersionInfo()
+    local major, minor, revision, codename = love.getVersion()
+    local versionInfo = string.format("Version %d.%d.%d - %s", major, minor, revision, codename)
+    local textX, textY = 5, HEIGHT/2.1
+    love.graphics.print(versionInfo, textX, textY)
 end
