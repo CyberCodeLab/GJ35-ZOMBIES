@@ -3,10 +3,10 @@ A zombie game for the [Gamecodeur Game Jam #35](https://itch.io/jam/gamecodeur-g
 
 # To Do
 - [x] Git & Github Setup
-- [ ] Project Structure Setup
+- [x] Project Structure Setup
 - [ ] Render Map
 - [ ] Image Player
-- [ ] Input Player
+- [x] Input Player
 - [ ] Animate Player
 - [ ] Image Zombies
 - [ ] Zombies Detects The Player
