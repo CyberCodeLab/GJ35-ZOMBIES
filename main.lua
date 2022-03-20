@@ -14,6 +14,7 @@
 ]]
 
 
+color = require 'colors'
 player = require 'player'
 
 
@@ -56,7 +57,7 @@ function love.draw()
     -- PARAMETERS
     local sxy = 2 -- scale
     love.graphics.scale(sxy, sxy)
-    love.graphics.setBackgroundColor(BGColor())
+    love.graphics.setBackgroundColor(RGBColor(color.green))
 
     -- PLAYER
     --love.graphics.draw(player.img, player.posX, player.posY, nil, 0.1)
@@ -67,6 +68,7 @@ function love.draw()
     DebugLoveVersionInfo()
 
 end
+
 
 
 function love.keypressed(key)
@@ -110,16 +112,9 @@ end
  ██████     ██    ██ ███████ ██    ██    ██ ███████ ███████ 
 ]]
 
-
-function BGColor()
-    red = 115/255
-    green = 27/255
-    blue = 135/255
-    alpha = 50/100
-    color = { red, green, blue, alpha}
-    return color
+function RGBColor(rb,gb,bb)
+    return love.math.colorFromBytes(rb, gb, bb)
 end
-
 
 --[[
 ██████  ███████ ██████  ██    ██  ██████  
