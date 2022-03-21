@@ -1,4 +1,4 @@
-# ZOMBIES-GGJ35
+# GGJ35-ZOMBIES
 A zombie game for the [Gamecodeur Game Jam #35](https://itch.io/jam/gamecodeur-gamejam-35)
 
 # To Do
@@ -11,6 +11,6 @@ A zombie game for the [Gamecodeur Game Jam #35](https://itch.io/jam/gamecodeur-g
 - [x] Image Zombies
 - [x] Zombies State Machine
 - [x] Limit of the map
-- [ ] Zombies Detects The Player
+- [x] Zombies Detects The Player
 - [ ] Zombies Attack The Player
 - [x] Animate Zombies
