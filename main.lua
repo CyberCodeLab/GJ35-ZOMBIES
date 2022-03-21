@@ -123,13 +123,16 @@ ZOMBIES_STATES.BITE = "attack"
 ZOMBIES_STATES.CHANGE_DIRRECTION = "change target"
 
 function UpdateZombieStates(_zombie)
+
     if _zombie.state == ZOMBIES_STATES.NONE then
 
         _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
 
     elseif _zombie.state == ZOMBIES_STATES.WALK then
 
-    elseif _zombie.state == ZOMBIES_STATES.ATTACK then 
+        LimitZombieScreen(_zombie, ZOMBIES_STATES.CHANGE_DIRRECTION)
+
+    elseif _zombie.state == ZOMBIES_STATES.ATTACK then
 
     elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
         
@@ -139,6 +142,40 @@ function UpdateZombieStates(_zombie)
         _zombie.state = ZOMBIES_STATES.WALK
 
     end
+
+end
+
+function LimitZombieScreen(_zombie, _state)
+
+    local checkCollision = false
+
+    --Horizontal limit
+    if _zombie.x < 0 then
+        _zombie.x = 0
+        checkCollision = true
+    end
+
+    if _zombie.x > WIDTH then
+        _zombie.x = WIDTH
+        checkCollision = true
+    end
+
+    --Vertical Limit
+    if _zombie.y < 0 then
+        _zombie.y = 0
+        checkCollision = true
+    end
+
+    if _zombie.y > HEIGHT then
+        _zombie.y = HEIGHT
+        checkCollision = true
+    end
+
+    --Check and change state
+    if checkCollision then
+        _zombie.state = _state
+    end
+
 end
 
 --[[
