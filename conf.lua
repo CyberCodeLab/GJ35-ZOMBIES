@@ -11,7 +11,7 @@ if pcall(require, "lldebugger") then
 end
 
 -- Switch off buffering mode for an output file.(The result of any output operation appears immediately) | They are two other mode: "full" or "line"
-io.stdout:setvbuf("no")
+io.stdout:setvbuf('no')
 
 -- Indicate my config
 function love.conf(t)
