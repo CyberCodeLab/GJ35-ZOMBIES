@@ -35,12 +35,12 @@ local color = require 'colors'
 ╚══════╝ ╚═════╝   ╚═══╝  ╚══════╝    ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
 ]]
 
-local renderScaleXY = 3 -- scale in x and y
+local renderScaleXY = 2 -- scale in x and y
 
 local lstSprites = {}
 lstSprites.animation = 5
 
-local totalZombie = 100
+local totalZombie = 500
 local speedZombie = 200
 local fps = 60
 
@@ -94,7 +94,7 @@ function love.draw()
 
     -- TEXT
     love.graphics.print("Score = 10 \n"..PrintLoveVersionInfo(), 0, 0)
-    Test()
+    --Test()
     love.graphics.pop()
 
 end
@@ -130,6 +130,11 @@ ZOMBIES_STATES.CHANGE_DIRRECTION = "change target"
 
 function UpdateZombieStates(_zombie, _entities)
 
+    if _zombie.state == nil then
+        print("****ERROR ZOMBIE STATE IS NIL****")
+        os.exit()
+    end
+
     if _zombie.state == ZOMBIES_STATES.NONE then
 
         _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
@@ -141,22 +146,30 @@ function UpdateZombieStates(_zombie, _entities)
 
     elseif _zombie.state == ZOMBIES_STATES.ATTACK then
 
-        -- Attack!!
-        local area = 20
-        local destX, destY
-        destX = math.random(_zombie.target.x - area, _zombie.target.x + area)
-        destY = math.random(_zombie.target.y - area, _zombie.target.y + area)
+        local lostTargetPlayer = math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y) > _zombie.range and _zombie.target.type == "human"
 
-        local angle = math.angle(_zombie.x,_zombie.y, destX, destY)
-        _zombie.speedX = _zombie.speed * 2 * fps * math.cos(angle)
-        _zombie.speedY = _zombie.speed * 2 * fps * math.sin(angle)
+        if _zombie.target == nil then
+            _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+        elseif lostTargetPlayer then
+            _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+        else
+            -- Attack!!
+            local randomMove = 20
+            local destX, destY
+            destX = math.random(_zombie.target.x - randomMove, _zombie.target.x + randomMove)
+            destY = math.random(_zombie.target.y - randomMove, _zombie.target.y + randomMove)
 
+            local angle = math.angle(_zombie.x,_zombie.y, destX, destY)
+            _zombie.speedX = _zombie.speed * 2 * fps * math.cos(angle)
+            _zombie.speedY = _zombie.speed * 2 * fps * math.sin(angle)
+        end
 
     elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
         
         local angle = math.angle(_zombie.x,_zombie.y, Random(0, WIDTH), Random(0, HEIGHT))
         _zombie.speedX = _zombie.speed * fps * math.cos(angle)
         _zombie.speedY = _zombie.speed * fps * math.sin(angle)
+        
         _zombie.state = ZOMBIES_STATES.WALK
 
     end
@@ -254,8 +267,8 @@ function CreateSprite(_myList, _spriteType, _spriteImgFile, _numberFrames)
 
     for i=1, _numberFrames do
         local filename = "assets/".._spriteImgFile.."_"..tostring(i)..".png"
-        print("Loading frame: "..filename)
         mySprite.images[i] = love.graphics.newImage(filename)
+         --print("Loading frame: "..filename)
     end
 
     -- Init Position
@@ -267,7 +280,6 @@ function CreateSprite(_myList, _spriteType, _spriteImgFile, _numberFrames)
     -- Get data
     mySprite.width = mySprite.images[1]:getWidth()
     mySprite.height = mySprite.images[1]:getHeight()
-
 
     table.insert(_myList, mySprite)
 
