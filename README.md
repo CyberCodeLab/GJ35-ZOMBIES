@@ -9,7 +9,8 @@ A zombie game for the [Gamecodeur Game Jam #35](https://itch.io/jam/gamecodeur-g
 - [x] Input Player
 - [x] Animate Player
 - [x] Image Zombies
-- [ ] Zombies State Machine
+- [x] Zombies State Machine
+- [x] Limit of the map
 - [ ] Zombies Detects The Player
 - [ ] Zombies Attack The Player
 - [x] Animate Zombies
