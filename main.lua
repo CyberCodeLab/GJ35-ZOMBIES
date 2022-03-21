@@ -40,7 +40,7 @@ local renderScaleXY = 3 -- scale in x and y
 local lstSprites = {}
 lstSprites.animation = 5
 
-local totalZombie = 3
+local totalZombie = 10
 local speedZombie = 200
 local fps = 60
 
@@ -122,6 +122,25 @@ ZOMBIES_STATES.ATTACK = "track" --TRACKING
 ZOMBIES_STATES.BITE = "attack"
 ZOMBIES_STATES.CHANGE_DIRRECTION = "change target"
 
+function UpdateZombieStates(_zombie)
+    if _zombie.state == ZOMBIES_STATES.NONE then
+
+        _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+
+    elseif _zombie.state == ZOMBIES_STATES.WALK then
+
+    elseif _zombie.state == ZOMBIES_STATES.ATTACK then 
+
+    elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
+        
+        local angle = math.angle(_zombie.x,_zombie.y, Random(0, WIDTH), Random(0, HEIGHT))
+        _zombie.speedX = _zombie.speed * fps * math.cos(angle)
+        _zombie.speedY = _zombie.speed * fps * math.sin(angle)
+        _zombie.state = ZOMBIES_STATES.WALK
+
+    end
+end
+
 --[[
 ██╗   ██╗████████╗██╗██╗     ██╗████████╗██╗███████╗███████╗
 ██║   ██║╚══██╔══╝██║██║     ██║╚══██╔══╝██║██╔════╝██╔════╝
@@ -145,11 +164,7 @@ function CreateZombie()
     myZombie.x = Random(10, WIDTH-10)
     myZombie.y = Random(10, (HEIGHT/2)-10)
     myZombie.speed = math.random(5,50) / speedZombie
-
-    local angle = math.angle(myZombie.x,myZombie.y, Random(0, WIDTH), Random(0, HEIGHT))
-    myZombie.speedX = myZombie.speed * fps * math.cos(angle)
-    myZombie.speedY = myZombie.speed * fps * math.sin(angle)
-    
+    myZombie.state = ZOMBIES_STATES.NONE
 end
 
 function GenerateZombie(_totalZombie)
@@ -201,12 +216,18 @@ function UpdateSprites(_lstSprites, _speedFrame, _dt)
         sprite.x = sprite.x + sprite.speedX * _dt
         sprite.y = sprite.y + sprite.speedY * _dt
 
+        -- AI
+        if sprite.type == "zombie" then
+            UpdateZombieStates(sprite)
+        end
+
     end
 end
 
 function Random(_min, _max)
     return love.math.random(_min, _max)
 end
+
 -- Returns the angle between two vectors assuming the same origin.
 function math.angle(_x1,_y1, _x2,_y2)
     return math.atan2(_y2-_y1, _x2-_x1)
