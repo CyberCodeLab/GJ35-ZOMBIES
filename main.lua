@@ -40,7 +40,7 @@ local renderScaleXY = 3 -- scale in x and y
 local lstSprites = {}
 lstSprites.animation = 5
 
-local totalZombie = 10
+local totalZombie = 100
 local speedZombie = 200
 local fps = 60
 
@@ -81,6 +81,12 @@ function love.draw()
     for i, sprite in ipairs(lstSprites) do
         local frame = sprite.images[math.floor(sprite.currentFrame)]
         love.graphics.draw(frame, sprite.x - sprite.width / 2, sprite.y - sprite.height / 2)
+
+        if sprite.type == "zombie" then
+            if love.keyboard.isDown("d") then
+                love.graphics.print(sprite.state, sprite.x - 10, sprite.y - sprite.height - 10)
+            end
+        end
     end
 
     --love.graphics.draw(player.img, player.posX, player.posY, nil, 0.1)
@@ -88,7 +94,7 @@ function love.draw()
 
     -- TEXT
     love.graphics.print("Score = 10 \n"..PrintLoveVersionInfo(), 0, 0)
-
+    Test()
     love.graphics.pop()
 
 end
@@ -122,7 +128,7 @@ ZOMBIES_STATES.ATTACK = "track" --TRACKING
 ZOMBIES_STATES.BITE = "attack"
 ZOMBIES_STATES.CHANGE_DIRRECTION = "change target"
 
-function UpdateZombieStates(_zombie)
+function UpdateZombieStates(_zombie, _entities)
 
     if _zombie.state == ZOMBIES_STATES.NONE then
 
@@ -131,8 +137,20 @@ function UpdateZombieStates(_zombie)
     elseif _zombie.state == ZOMBIES_STATES.WALK then
 
         LimitZombieScreen(_zombie, ZOMBIES_STATES.CHANGE_DIRRECTION)
+        LookForPlayer(_zombie, _entities)
 
     elseif _zombie.state == ZOMBIES_STATES.ATTACK then
+
+        -- Attack!!
+        local area = 20
+        local destX, destY
+        destX = math.random(_zombie.target.x - area, _zombie.target.x + area)
+        destY = math.random(_zombie.target.y - area, _zombie.target.y + area)
+
+        local angle = math.angle(_zombie.x,_zombie.y, destX, destY)
+        _zombie.speedX = _zombie.speed * 2 * fps * math.cos(angle)
+        _zombie.speedY = _zombie.speed * 2 * fps * math.sin(angle)
+
 
     elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
         
@@ -178,6 +196,18 @@ function LimitZombieScreen(_zombie, _state)
 
 end
 
+function LookForPlayer(_zombie, _entities)
+    for i, sprite in ipairs(_entities) do
+        if sprite.type == "human" then
+            local distance = math.dist(_zombie.x, _zombie.y, sprite.x, sprite.y)
+            if distance < _zombie.range then
+                _zombie.state = ZOMBIES_STATES.ATTACK
+                _zombie.target = sprite
+            end
+        end
+    end
+end
+
 --[[
 ██╗   ██╗████████╗██╗██╗     ██╗████████╗██╗███████╗███████╗
 ██║   ██║╚══██╔══╝██║██║     ██║╚══██╔══╝██║██╔════╝██╔════╝
@@ -197,11 +227,15 @@ end
 
 function CreateZombie()
     local totalFrameZombie = 2
-    local myZombie = CreateSprite(lstSprites, "zombie", "monster", totalFrameZombie)
-    myZombie.x = Random(10, WIDTH-10)
-    myZombie.y = Random(10, (HEIGHT/2)-10)
-    myZombie.speed = math.random(5,50) / speedZombie
-    myZombie.state = ZOMBIES_STATES.NONE
+    local newZombie = CreateSprite(lstSprites, "zombie", "monster", totalFrameZombie)
+    newZombie.x = Random(10, WIDTH-10)
+    newZombie.y = Random(10, (HEIGHT/2)-10)
+
+    newZombie.speed = Random(5,50) / speedZombie
+    newZombie.range = Random(10,150)
+    newZombie.target = nil
+
+    newZombie.state = ZOMBIES_STATES.NONE
 end
 
 function GenerateZombie(_totalZombie)
@@ -255,7 +289,7 @@ function UpdateSprites(_lstSprites, _speedFrame, _dt)
 
         -- AI
         if sprite.type == "zombie" then
-            UpdateZombieStates(sprite)
+            UpdateZombieStates(sprite, _lstSprites)
         end
 
     end
@@ -278,6 +312,7 @@ end
 function RGBColor(_rb,_gb,_bb)
     return love.math.colorFromBytes(_rb, _gb, _bb)
 end
+
 
 --[[
 ██╗███╗   ██╗██████╗ ██╗   ██╗████████╗
@@ -323,4 +358,15 @@ function PrintLoveVersionInfo()
     local major, minor, revision, codename = love.getVersion()
     local versionInfo = string.format("Version %d.%d.%d - %s", major, minor, revision, codename)
     return versionInfo
+end
+
+--TEST
+function Test()
+
+    if love.keyboard.isDown("i") then
+        love.graphics.print("ALLWAYS", WIDTH/2, HEIGHT/2)
+        --do return end
+        love.graphics.print("TEST", WIDTH/2-10, HEIGHT/2-10)
+    end
+    
 end
