@@ -1,7 +1,13 @@
-# GJ35-ZOMBIES
+## Summary
+1. [Description](#Description)
+2. [To Do](#To-Do)
+
+## Description
 A zombie game for the [Gamecodeur Game Jam #35](https://itch.io/jam/gamecodeur-gamejam-35)
 
-# To Do
+Using the [Love 2D Framework](https://love2d.org) only
+
+## To Do
 - [x] Git & Github Setup
 - [x] Project Structure Setup
 - [x] Color Background
