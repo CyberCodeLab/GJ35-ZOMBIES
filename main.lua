@@ -42,6 +42,8 @@ lstSprites.animation = 5
 
 local totalZombie = 10
 local speedZombie = 200
+local zombieHitDamage = 0.1
+local zombieImgAlert = love.graphics.newImage("assets/alert.png");
 local fps = 60
 
 function love.load()
@@ -53,7 +55,7 @@ function love.load()
     WIDTH = love.graphics.getWidth() / renderScaleXY
     HEIGHT = love.graphics.getHeight() / renderScaleXY
 
-    CreatePlayer()
+    player = CreatePlayer()
     GenerateZombie(totalZombie)
 
 end
@@ -64,7 +66,7 @@ function love.update(dt)
     dt = math.min(dt, 1/fps)
     --print(dt)
 
-    CheckPlayerInputs(dt)
+    CheckPlayerInputs(player, dt)
     UpdateSprites(lstSprites, lstSprites.animation, dt)
 
 end
@@ -82,7 +84,7 @@ function love.draw()
 
     -- TEXT
     love.graphics.rectangle("line",0,0,82,16)
-    love.graphics.print("Life = "..tostring(player.life).."%", 4, 1)
+    love.graphics.print("Life = "..tostring(math.floor(player.life)).."%", 4, 1)
 
     love.graphics.pop()
 
@@ -163,6 +165,13 @@ function UpdateZombieStates(_zombie, _entities)
 
         if Distance(_zombie) > 5 and _zombie.target.type == "human" then
             _zombie.state = ZOMBIES_STATES.ATTACK
+        else
+            if _zombie.target.Hurt ~= nil then
+                _zombie.target.Hurt()
+            end
+            if _zombie.target.visible == false then
+                _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+            end
         end
         
     elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
@@ -210,9 +219,15 @@ function LimitZombieScreen(_zombie, _state)
 
 end
 
+function ZombieAlertIcon(_sprite)
+    if _sprite.state == ZOMBIES_STATES.ATTACK then
+        love.graphics.draw(zombieImgAlert, _sprite.x - zombieImgAlert:getWidth()/2, _sprite.y - _sprite.height - 2 )
+    end
+end
+
 function LookForPlayer(_zombie, _entities)
     for i, sprite in ipairs(_entities) do
-        if sprite.type == "human" then
+        if sprite.type == "human" and sprite.visible == true then
             local distance = math.dist(_zombie.x, _zombie.y, sprite.x, sprite.y)
             if distance < _zombie.range then
                 _zombie.state = ZOMBIES_STATES.ATTACK
@@ -236,36 +251,53 @@ end
 ]]
 
 function CreatePlayer()
+
     local totalFramePlayer = 4
-    player = CreateSprite(lstSprites, "human", "player", totalFramePlayer)
-    player.x = WIDTH / 2 -- center
-    player.y = (HEIGHT / 6) * 5 -- Center down of 5/6 the screen
-    player.speed = 200
-    player.life = 100
+    local newPlayer = {}
+    newPlayer = CreateSprite(lstSprites, "human", "player", totalFramePlayer)
+    newPlayer.x = WIDTH / 2 -- center
+    newPlayer.y = (HEIGHT / 6) * 5 -- Center down of 5/6 the screen
+    newPlayer.speed = 200
+    newPlayer.life = 100
+    newPlayer.Hurt = function ()
+        newPlayer.life = newPlayer.life - zombieHitDamage
+        --Game Over
+        if newPlayer.life <=0 then 
+            newPlayer.life = 0
+            newPlayer.visible = false
+        end
+    end
+
+    return newPlayer
 end
 
 function CreateZombie()
     local totalFrameZombie = 2
-    local newZombie = CreateSprite(lstSprites, "zombie", "monster", totalFrameZombie)
+    local newZombie = {}
+    newZombie = CreateSprite(lstSprites, "zombie", "monster", totalFrameZombie)
     newZombie.x = Random(10, WIDTH-10)
     newZombie.y = Random(10, (HEIGHT/2)-10)
 
     newZombie.speed = Random(5,50) / speedZombie
     newZombie.range = Random(10,150)
     newZombie.target = nil
+    newZombie.damage = zombieHitDamage
 
     newZombie.state = ZOMBIES_STATES.NONE
+
+    return newZombie
 end
 
 function GenerateZombie(_totalZombie)
     for nZombie = 1, _totalZombie do
-        CreateZombie()
+        zombie = CreateZombie()
     end
 end
 
 function CreateSprite(_myList, _spriteType, _spriteImgFile, _numberFrames)
     local mySprite = {}
     mySprite.type = _spriteType
+    mySprite.visible = true
 
     -- loading sprite data
     mySprite.images = {}
@@ -315,10 +347,14 @@ end
 
 function DrawSprites(_lstSprites)
     for i, sprite in ipairs(_lstSprites) do
-        local frame = sprite.images[math.floor(sprite.currentFrame)]
-        love.graphics.draw(frame, sprite.x - sprite.width / 2, sprite.y - sprite.height / 2)
-
-        StateInfos(sprite)
+        if sprite.visible == true then
+            local frame = sprite.images[math.floor(sprite.currentFrame)]
+            love.graphics.draw(frame, sprite.x - sprite.width / 2, sprite.y - sprite.height / 2)
+            if sprite.type == "zombie" then
+                StateInfos(sprite)
+                ZombieAlertIcon(sprite)
+            end
+        end
     end
 end
 
@@ -351,22 +387,26 @@ end
 ]]
 
 
-function CheckPlayerInputs(_dt)
+function CheckPlayerInputs(_player, _dt)
+
+    if _player.visible == false then
+        do return end
+    end
 
     if love.keyboard.isDown("left") then
-    player.x = player.x - player.speed * _dt
+    _player.x = _player.x - _player.speed * _dt
     end
     
     if love.keyboard.isDown("up") then
-        player.y = player.y - player.speed * _dt
+        _player.y = _player.y - _player.speed * _dt
     end
 
     if love.keyboard.isDown("right") then
-        player.x = player.x + player.speed * _dt
+        _player.x = _player.x + _player.speed * _dt
     end
 
     if love.keyboard.isDown("down") then
-        player.y = player.y + player.speed * _dt
+        _player.y = _player.y + _player.speed * _dt
     end
 
 end
@@ -387,12 +427,10 @@ function PrintLoveVersionInfo()
     return versionInfo
 end
 
-function StateInfos(_sprites)
+function StateInfos(_sprite)
     local keypressed = "i"
-    if _sprites.type == "zombie" then
-        if love.keyboard.isDown(keypressed) then
-            love.graphics.print(_sprites.state, _sprites.x - 10, _sprites.y - _sprites.height - 10)
-        end
+    if love.keyboard.isDown(keypressed) then
+        love.graphics.print(_sprite.state, _sprite.x - 10, _sprite.y - _sprite.height - 10)
     end
 end
 
