@@ -21,7 +21,7 @@ function love.conf(t)
     t.window.icon = "assets/zombie_icon.png"
     t.window.width = 800
     t.window.height = 600
-    t.window.resizable = true
+    t.window.resizable = false
     t.window.fullscreen = false
     t.window.vsync  = true
     t.window.minwidth = 800
