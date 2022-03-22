@@ -24,6 +24,7 @@ $$$$$$$  |\$$$$$$$ |      \$$$$$$  |   $$ |    $$$$$$$  |$$$$$$$$\ $$ |  $$ |\$$
 
 
 local color = require 'colors'
+local ZOMBIES_STATES = require 'zombieStates'
 
 
 --[[
@@ -35,15 +36,18 @@ local color = require 'colors'
 ╚══════╝ ╚═════╝   ╚═══╝  ╚══════╝    ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
 ]]
 
+
 local renderScaleXY = 3 -- scale in x and y
 
 local lstSprites = {}
 lstSprites.animation = 5
 
-local totalZombie = 10
+local totalZombie = 100
 local speedZombie = 200
 local zombieHitDamage = 0.1
 local zombieImgAlert = love.graphics.newImage("assets/alert.png");
+
+local showInfos = false
 local fps = 60
 
 function love.load()
@@ -51,12 +55,16 @@ function love.load()
     -- Filtering images for pixel perfect. (The FilterMode is Linear by default)
     love.graphics.setDefaultFilter("nearest")
 
-    -- Windows
-    WIDTH = love.graphics.getWidth() / renderScaleXY
-    HEIGHT = love.graphics.getHeight() / renderScaleXY
+    -- Init Windows Params
+    WINDOW_WIDTH = love.graphics.getWidth() / renderScaleXY
+    WINDOW_HEIGHT = love.graphics.getHeight() / renderScaleXY
 
-    player = CreatePlayer()
-    GenerateZombie(totalZombie)
+    -- Init Characters
+    _player = CreatePlayer()
+    zombies = GenerateZombie(totalZombie)
+
+    -- Set game state
+
 
 end
 
@@ -66,7 +74,8 @@ function love.update(dt)
     dt = math.min(dt, 1/fps)
     --print(dt)
 
-    CheckPlayerInputs(player, dt)
+    CheckPlayerInputs(_player, dt)
+    LimitPlayerScreen(_player)
     UpdateSprites(lstSprites, lstSprites.animation, dt)
 
 end
@@ -75,49 +84,126 @@ function love.draw()
 
     love.graphics.push() -- save all graphics params
 
-    -- DRAW ARAMS
+    -- DRAW PARAMS
     love.graphics.scale(renderScaleXY, renderScaleXY)
     love.graphics.setBackgroundColor(RGBColor(color.black))
 
-    -- SPRITES
+    -- DRAW SPRITES
     DrawSprites(lstSprites)
 
-    -- TEXT
+    -- DRAW TEXT
     love.graphics.rectangle("line",0,0,82,16)
-    love.graphics.print("Life = "..tostring(math.floor(player.life)).."%", 4, 1)
+    love.graphics.print("Life = "..tostring(math.floor(_player.life)).."%", 4, 1)
 
     love.graphics.pop()
 
 end
 
-
-
 function love.keypressed(_key)
 
     print("Key pressed: ".._key)
     
-    if _key == "escape" then
+    local keypressedEsc = "escape"
+    local keypressedInfos = "i"
+
+    if _key == keypressedEsc then
         love.event.quit()
         return
     end
 
+    if _key == keypressedInfos then
+       showInfos = showInfos ~= true
+    end
+    
 end
 
 --[[
-███████╗███╗   ██╗██╗   ██╗███╗   ███╗    ███████╗████████╗ █████╗ ████████╗███████╗███████╗
-██╔════╝████╗  ██║██║   ██║████╗ ████║    ██╔════╝╚══██╔══╝██╔══██╗╚══██╔══╝██╔════╝██╔════╝
-█████╗  ██╔██╗ ██║██║   ██║██╔████╔██║    ███████╗   ██║   ███████║   ██║   █████╗  ███████╗
-██╔══╝  ██║╚██╗██║██║   ██║██║╚██╔╝██║    ╚════██║   ██║   ██╔══██║   ██║   ██╔══╝  ╚════██║
-███████╗██║ ╚████║╚██████╔╝██║ ╚═╝ ██║    ███████║   ██║   ██║  ██║   ██║   ███████╗███████║
-╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝    ╚══════╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚══════╝
+██████╗ ██╗      █████╗ ██╗   ██╗███████╗██████╗ 
+██╔══██╗██║     ██╔══██╗╚██╗ ██╔╝██╔════╝██╔══██╗
+██████╔╝██║     ███████║ ╚████╔╝ █████╗  ██████╔╝
+██╔═══╝ ██║     ██╔══██║  ╚██╔╝  ██╔══╝  ██╔══██╗
+██║     ███████╗██║  ██║   ██║   ███████╗██║  ██║
+╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
 ]]
 
-ZOMBIES_STATES = {}
-ZOMBIES_STATES.NONE = ""
-ZOMBIES_STATES.WALK = "walk"
-ZOMBIES_STATES.ATTACK = "track" --TRACKING
-ZOMBIES_STATES.BITE = "attack"
-ZOMBIES_STATES.CHANGE_DIRRECTION = "change target"
+function CreatePlayer()
+
+    local totalFramePlayer = 4
+    local newPlayer = {}
+    newPlayer = CreateSprite(lstSprites, "human", "player", totalFramePlayer)
+    newPlayer.x = WINDOW_WIDTH / 2 -- center
+    newPlayer.y = (WINDOW_HEIGHT / 6) * 5 -- Center down of 5/6 the screen
+    newPlayer.speed = 200
+    newPlayer.life = 100
+    
+    newPlayer.Hurt = 
+    function ()
+        newPlayer.life = newPlayer.life - zombieHitDamage
+        --Game Over
+        if newPlayer.life <=0 then 
+            newPlayer.life = 0
+            newPlayer.visible = false
+        end
+    end
+
+    return newPlayer
+end
+
+function LimitPlayerScreen(_player)
+    if _player.x < 0 then
+        _player.x = 0
+    end
+
+    if _player.x >= WINDOW_WIDTH then
+        _player.x = WINDOW_WIDTH
+    end
+
+    if _player.y < 0 then
+        _player.y = 0
+    end
+
+    if _player.y >= WINDOW_HEIGHT then
+        _player.y = WINDOW_HEIGHT
+    end
+end
+
+
+--[[
+███████╗ ██████╗ ███╗   ███╗██████╗ ██╗███████╗███████╗
+╚══███╔╝██╔═══██╗████╗ ████║██╔══██╗██║██╔════╝██╔════╝
+  ███╔╝ ██║   ██║██╔████╔██║██████╔╝██║█████╗  ███████╗
+ ███╔╝  ██║   ██║██║╚██╔╝██║██╔══██╗██║██╔══╝  ╚════██║
+███████╗╚██████╔╝██║ ╚═╝ ██║██████╔╝██║███████╗███████║
+╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═════╝ ╚═╝╚══════╝╚══════╝
+]]
+
+function CreateZombie()
+    local totalFrameZombie = 2
+
+    local newZombie = {}
+    newZombie = CreateSprite(lstSprites, "zombie", "monster", totalFrameZombie)
+    newZombie.x = Random(10, WINDOW_WIDTH-10)
+    newZombie.y = Random(10, (WINDOW_HEIGHT/2)-10)
+
+    newZombie.speed = Random(5,50) / speedZombie
+    newZombie.range = Random(10,150)
+    newZombie.target = nil
+    newZombie.damage = zombieHitDamage
+
+    newZombie.state = ZOMBIES_STATES.NONE
+
+    return newZombie
+end
+
+function GenerateZombie(_totalZombie)
+    local zombies = {}
+
+    for i = 1, _totalZombie do
+        zombies.spawn = CreateZombie()
+    end
+
+    return zombies
+end
 
 function UpdateZombieStates(_zombie, _entities)
 
@@ -134,98 +220,69 @@ function UpdateZombieStates(_zombie, _entities)
     elseif _zombie.state == ZOMBIES_STATES.WALK then
 
         LimitZombieScreen(_zombie, ZOMBIES_STATES.CHANGE_DIRRECTION)
-        LookForPlayer(_zombie, _entities)
+        ZombieLookForPlayer(_zombie, _entities)
 
     elseif _zombie.state == ZOMBIES_STATES.ATTACK then
 
-        --local lostTargetPlayer = math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y) > _zombie.range and _zombie.target.type == "human"
-        --local lostTargetPlayerInverted = math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y) < 5 and _zombie.target.type == "human"
-
-        if _zombie.target == nil then
-            _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
-        elseif Distance(_zombie) > _zombie.range and _zombie.target.type == "human" then
-            _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
-        elseif Distance(_zombie) < 5 and _zombie.target.type == "human" then
-            _zombie.state = ZOMBIES_STATES.BITE
-            _zombie.speedX = 0
-            _zombie.speedY = 0
-        else
-            -- Attack!!
-            local randomMove = 20
-            local destX, destY
-            destX = math.random(_zombie.target.x - randomMove, _zombie.target.x + randomMove)
-            destY = math.random(_zombie.target.y - randomMove, _zombie.target.y + randomMove)
-
-            local angle = math.angle(_zombie.x,_zombie.y, destX, destY)
-            _zombie.speedX = _zombie.speed * 2 * fps * math.cos(angle)
-            _zombie.speedY = _zombie.speed * 2 * fps * math.sin(angle)
-        end
+        ZombieTrackTheTarget(_zombie, 5)
 
     elseif _zombie.state == ZOMBIES_STATES.BITE then
 
-        if Distance(_zombie) > 5 and _zombie.target.type == "human" then
-            _zombie.state = ZOMBIES_STATES.ATTACK
-        else
-            if _zombie.target.Hurt ~= nil then
-                _zombie.target.Hurt()
-            end
-            if _zombie.target.visible == false then
-                _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
-            end
-        end
+        ZombieBiteTheTarget(_zombie, 5)
         
     elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
         
-        local angle = math.angle(_zombie.x,_zombie.y, Random(0, WIDTH), Random(0, HEIGHT))
-        _zombie.speedX = _zombie.speed * fps * math.cos(angle)
-        _zombie.speedY = _zombie.speed * fps * math.sin(angle)
-        
-        _zombie.state = ZOMBIES_STATES.WALK
+        RandomZombieMove(_zombie)
 
     end
 
 end
 
-function LimitZombieScreen(_zombie, _state)
-
-    local checkCollision = false
-
-    --Horizontal limit
-    if _zombie.x < 0 then
-        _zombie.x = 0
-        checkCollision = true
-    end
-
-    if _zombie.x > WIDTH then
-        _zombie.x = WIDTH
-        checkCollision = true
-    end
-
-    --Vertical Limit
-    if _zombie.y < 0 then
-        _zombie.y = 0
-        checkCollision = true
-    end
-
-    if _zombie.y > HEIGHT then
-        _zombie.y = HEIGHT
-        checkCollision = true
-    end
-
-    --Check and change state
-    if checkCollision then
-        _zombie.state = _state
-    end
-
+function RandomZombieMove(_zombie)
+    local angle = math.angle(_zombie.x,_zombie.y, Random(0, WINDOW_WIDTH), Random(0, WINDOW_HEIGHT))
+    _zombie.speedX = _zombie.speed * fps * math.cos(angle)
+    _zombie.speedY = _zombie.speed * fps * math.sin(angle)
+    
+    _zombie.state = ZOMBIES_STATES.WALK
 end
 
-function ZombieAlertIcon(_sprite)
-    if _sprite.state == ZOMBIES_STATES.ATTACK then
-        love.graphics.draw(zombieImgAlert, _sprite.x - zombieImgAlert:getWidth()/2, _sprite.y - _sprite.height - 2 )
+function ZombieBiteTheTarget(_zombie, _rangeZone)
+    if DistanceBetweenTargetAndZombie(_zombie) > _rangeZone and _zombie.target.type == "human" then
+        _zombie.state = ZOMBIES_STATES.ATTACK
+    else
+        if _zombie.target.Hurt ~= nil then
+            _zombie.target.Hurt()
+        end
+        if _zombie.target.visible == false then
+            _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+        end
     end
 end
 
-function LookForPlayer(_zombie, _entities)
+function ZombieTrackTheTarget(_zombie, _rangeZone)
+    if _zombie.target == nil then
+        _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+    elseif _zombie.target.visible == false then
+        _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+    elseif DistanceBetweenTargetAndZombie(_zombie) > _zombie.range and _zombie.target.type == "human" then
+        _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+    elseif DistanceBetweenTargetAndZombie(_zombie) < _rangeZone and _zombie.target.type == "human" then
+        _zombie.state = ZOMBIES_STATES.BITE
+        _zombie.speedX = 0
+        _zombie.speedY = 0
+    else
+        local randomMove = 20
+        local destX, destY
+        destX = math.random(_zombie.target.x - randomMove, _zombie.target.x + randomMove)
+        destY = math.random(_zombie.target.y - randomMove, _zombie.target.y + randomMove)
+
+        local angle = math.angle(_zombie.x,_zombie.y, destX, destY)
+        _zombie.speedX = _zombie.speed * 2 * fps * math.cos(angle)
+        _zombie.speedY = _zombie.speed * 2 * fps * math.sin(angle)
+    end
+end
+
+function ZombieLookForPlayer(_zombie, _entities)
     for i, sprite in ipairs(_entities) do
         if sprite.type == "human" and sprite.visible == true then
             local distance = math.dist(_zombie.x, _zombie.y, sprite.x, sprite.y)
@@ -237,91 +294,63 @@ function LookForPlayer(_zombie, _entities)
     end
 end
 
-function Distance(_zombie)
+function DistanceBetweenTargetAndZombie(_zombie)
     return math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y)
 end
 
+function LimitZombieScreen(_zombie, _newState)
+    local screenLimit = _zombie.x < 0 or _zombie.y < 0 or _zombie.x > WINDOW_WIDTH or _zombie.y > WINDOW_HEIGHT
+    if screenLimit then
+        _zombie.state = _newState
+    end
+end
+
+function ZombieAlertIcon(_sprite)
+    if _sprite.state == ZOMBIES_STATES.ATTACK then
+        love.graphics.draw(zombieImgAlert, _sprite.x - zombieImgAlert:getWidth()/2, _sprite.y - _sprite.height - 2 )
+    end
+end
+
+
 --[[
-██╗   ██╗████████╗██╗██╗     ██╗████████╗██╗███████╗███████╗
-██║   ██║╚══██╔══╝██║██║     ██║╚══██╔══╝██║██╔════╝██╔════╝
-██║   ██║   ██║   ██║██║     ██║   ██║   ██║█████╗  ███████╗
-██║   ██║   ██║   ██║██║     ██║   ██║   ██║██╔══╝  ╚════██║
-╚██████╔╝   ██║   ██║███████╗██║   ██║   ██║███████╗███████║
- ╚═════╝    ╚═╝   ╚═╝╚══════╝╚═╝   ╚═╝   ╚═╝╚══════╝╚══════╝
+███████╗██████╗ ██████╗ ██╗████████╗███████╗███████╗
+██╔════╝██╔══██╗██╔══██╗██║╚══██╔══╝██╔════╝██╔════╝
+███████╗██████╔╝██████╔╝██║   ██║   █████╗  ███████╗
+╚════██║██╔═══╝ ██╔══██╗██║   ██║   ██╔══╝  ╚════██║
+███████║██║     ██║  ██║██║   ██║   ███████╗███████║
+╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝   ╚═╝   ╚══════╝╚══════╝
 ]]
 
-function CreatePlayer()
-
-    local totalFramePlayer = 4
-    local newPlayer = {}
-    newPlayer = CreateSprite(lstSprites, "human", "player", totalFramePlayer)
-    newPlayer.x = WIDTH / 2 -- center
-    newPlayer.y = (HEIGHT / 6) * 5 -- Center down of 5/6 the screen
-    newPlayer.speed = 200
-    newPlayer.life = 100
-    newPlayer.Hurt = function ()
-        newPlayer.life = newPlayer.life - zombieHitDamage
-        --Game Over
-        if newPlayer.life <=0 then 
-            newPlayer.life = 0
-            newPlayer.visible = false
-        end
-    end
-
-    return newPlayer
-end
-
-function CreateZombie()
-    local totalFrameZombie = 2
-    local newZombie = {}
-    newZombie = CreateSprite(lstSprites, "zombie", "monster", totalFrameZombie)
-    newZombie.x = Random(10, WIDTH-10)
-    newZombie.y = Random(10, (HEIGHT/2)-10)
-
-    newZombie.speed = Random(5,50) / speedZombie
-    newZombie.range = Random(10,150)
-    newZombie.target = nil
-    newZombie.damage = zombieHitDamage
-
-    newZombie.state = ZOMBIES_STATES.NONE
-
-    return newZombie
-end
-
-function GenerateZombie(_totalZombie)
-    for nZombie = 1, _totalZombie do
-        zombie = CreateZombie()
-    end
-end
 
 function CreateSprite(_myList, _spriteType, _spriteImgFile, _numberFrames)
-    local mySprite = {}
-    mySprite.type = _spriteType
-    mySprite.visible = true
+    local newSprite = {}
+    newSprite.type = _spriteType
+    newSprite.visible = true
+    newSprite.life = 100
 
     -- loading sprite data
-    mySprite.images = {}
-    mySprite.currentFrame = 1 --default image selected
+    newSprite.images = {}
+    newSprite.currentFrame = 1 --default image selected
 
     for i=1, _numberFrames do
         local filename = "assets/".._spriteImgFile.."_"..tostring(i)..".png"
-        mySprite.images[i] = love.graphics.newImage(filename)
+        newSprite.images[i] = love.graphics.newImage(filename)
          --print("Loading frame: "..filename)
     end
 
     -- Init Position
-    mySprite.x = 0
-    mySprite.y = 0
-    mySprite.speedX = 0
-    mySprite.speedY = 0
+    newSprite.x = 0
+    newSprite.y = 0
+    newSprite.speedX = 0
+    newSprite.speedY = 0
 
     -- Get data
-    mySprite.width = mySprite.images[1]:getWidth()
-    mySprite.height = mySprite.images[1]:getHeight()
+    newSprite.width = newSprite.images[1]:getWidth()
+    newSprite.height = newSprite.images[1]:getHeight()
 
-    table.insert(_myList, mySprite)
+    table.insert(_myList, newSprite)
 
-    return mySprite
+    return newSprite
 end
 
 function UpdateSprites(_lstSprites, _speedFrame, _dt)
@@ -357,6 +386,17 @@ function DrawSprites(_lstSprites)
         end
     end
 end
+
+
+--[[
+██╗   ██╗████████╗██╗██╗     ██╗████████╗██╗███████╗███████╗
+██║   ██║╚══██╔══╝██║██║     ██║╚══██╔══╝██║██╔════╝██╔════╝
+██║   ██║   ██║   ██║██║     ██║   ██║   ██║█████╗  ███████╗
+██║   ██║   ██║   ██║██║     ██║   ██║   ██║██╔══╝  ╚════██║
+╚██████╔╝   ██║   ██║███████╗██║   ██║   ██║███████╗███████║
+ ╚═════╝    ╚═╝   ╚═╝╚══════╝╚═╝   ╚═╝   ╚═╝╚══════╝╚══════╝
+]]
+
 
 function Random(_min, _max)
     return love.math.random(_min, _max)
@@ -428,17 +468,15 @@ function PrintLoveVersionInfo()
 end
 
 function StateInfos(_sprite)
-    local keypressed = "i"
-    if love.keyboard.isDown(keypressed) then
+    if showInfos == true then
         love.graphics.print(_sprite.state, _sprite.x - 10, _sprite.y - _sprite.height - 10)
     end
 end
 
---TEST
-function Test()
+function DebugTest()
     if love.keyboard.isDown("i") then
-        love.graphics.print("ALLWAYS", WIDTH/2, HEIGHT/2)
+        love.graphics.print("ALLWAYS", WINDOW_WIDTH/2, WINDOW_HEIGHT/2)
         --do return end
-        love.graphics.print("TEST", WIDTH/2-10, HEIGHT/2-10)
+        love.graphics.print("TEST", WINDOW_WIDTH/2-10, WINDOW_HEIGHT/2-10)
     end
 end
