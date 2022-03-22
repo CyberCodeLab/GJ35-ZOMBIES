@@ -15,3 +15,6 @@ A zombie game for the [Gamecodeur Game Jam #35](https://itch.io/jam/gamecodeur-g
 - [x] Zombies Attack The Player
 - [x] Animate Zombies
 - [x] Zombie alert icon
+- [ ] keyboard shortcut to restart
+- [ ] Menus (home, pause, game over, buttons)
+- [ ] Create an executable
