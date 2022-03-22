@@ -35,12 +35,12 @@ local color = require 'colors'
 ╚══════╝ ╚═════╝   ╚═══╝  ╚══════╝    ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
 ]]
 
-local renderScaleXY = 2 -- scale in x and y
+local renderScaleXY = 3 -- scale in x and y
 
 local lstSprites = {}
 lstSprites.animation = 5
 
-local totalZombie = 500
+local totalZombie = 10
 local speedZombie = 200
 local fps = 60
 
@@ -78,23 +78,12 @@ function love.draw()
     love.graphics.setBackgroundColor(RGBColor(color.black))
 
     -- SPRITES
-    for i, sprite in ipairs(lstSprites) do
-        local frame = sprite.images[math.floor(sprite.currentFrame)]
-        love.graphics.draw(frame, sprite.x - sprite.width / 2, sprite.y - sprite.height / 2)
-
-        if sprite.type == "zombie" then
-            if love.keyboard.isDown("d") then
-                love.graphics.print(sprite.state, sprite.x - 10, sprite.y - sprite.height - 10)
-            end
-        end
-    end
-
-    --love.graphics.draw(player.img, player.posX, player.posY, nil, 0.1)
-    --love.graphics.rectangle("fill", player.posX, player.posY, player.size, player.size)
+    DrawSprites(lstSprites)
 
     -- TEXT
-    love.graphics.print("Score = 10 \n"..PrintLoveVersionInfo(), 0, 0)
-    --Test()
+    love.graphics.rectangle("line",0,0,82,16)
+    love.graphics.print("Life = "..tostring(player.life).."%", 4, 1)
+
     love.graphics.pop()
 
 end
@@ -135,6 +124,7 @@ function UpdateZombieStates(_zombie, _entities)
         os.exit()
     end
 
+
     if _zombie.state == ZOMBIES_STATES.NONE then
 
         _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
@@ -146,12 +136,17 @@ function UpdateZombieStates(_zombie, _entities)
 
     elseif _zombie.state == ZOMBIES_STATES.ATTACK then
 
-        local lostTargetPlayer = math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y) > _zombie.range and _zombie.target.type == "human"
+        --local lostTargetPlayer = math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y) > _zombie.range and _zombie.target.type == "human"
+        --local lostTargetPlayerInverted = math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y) < 5 and _zombie.target.type == "human"
 
         if _zombie.target == nil then
             _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
-        elseif lostTargetPlayer then
+        elseif Distance(_zombie) > _zombie.range and _zombie.target.type == "human" then
             _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
+        elseif Distance(_zombie) < 5 and _zombie.target.type == "human" then
+            _zombie.state = ZOMBIES_STATES.BITE
+            _zombie.speedX = 0
+            _zombie.speedY = 0
         else
             -- Attack!!
             local randomMove = 20
@@ -164,6 +159,12 @@ function UpdateZombieStates(_zombie, _entities)
             _zombie.speedY = _zombie.speed * 2 * fps * math.sin(angle)
         end
 
+    elseif _zombie.state == ZOMBIES_STATES.BITE then
+
+        if Distance(_zombie) > 5 and _zombie.target.type == "human" then
+            _zombie.state = ZOMBIES_STATES.ATTACK
+        end
+        
     elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
         
         local angle = math.angle(_zombie.x,_zombie.y, Random(0, WIDTH), Random(0, HEIGHT))
@@ -221,6 +222,10 @@ function LookForPlayer(_zombie, _entities)
     end
 end
 
+function Distance(_zombie)
+    return math.dist(_zombie.x, _zombie.y, _zombie.target.x, _zombie.target.y)
+end
+
 --[[
 ██╗   ██╗████████╗██╗██╗     ██╗████████╗██╗███████╗███████╗
 ██║   ██║╚══██╔══╝██║██║     ██║╚══██╔══╝██║██╔════╝██╔════╝
@@ -236,6 +241,7 @@ function CreatePlayer()
     player.x = WIDTH / 2 -- center
     player.y = (HEIGHT / 6) * 5 -- Center down of 5/6 the screen
     player.speed = 200
+    player.life = 100
 end
 
 function CreateZombie()
@@ -307,6 +313,15 @@ function UpdateSprites(_lstSprites, _speedFrame, _dt)
     end
 end
 
+function DrawSprites(_lstSprites)
+    for i, sprite in ipairs(_lstSprites) do
+        local frame = sprite.images[math.floor(sprite.currentFrame)]
+        love.graphics.draw(frame, sprite.x - sprite.width / 2, sprite.y - sprite.height / 2)
+
+        StateInfos(sprite)
+    end
+end
+
 function Random(_min, _max)
     return love.math.random(_min, _max)
 end
@@ -372,13 +387,20 @@ function PrintLoveVersionInfo()
     return versionInfo
 end
 
+function StateInfos(_sprites)
+    local keypressed = "i"
+    if _sprites.type == "zombie" then
+        if love.keyboard.isDown(keypressed) then
+            love.graphics.print(_sprites.state, _sprites.x - 10, _sprites.y - _sprites.height - 10)
+        end
+    end
+end
+
 --TEST
 function Test()
-
     if love.keyboard.isDown("i") then
         love.graphics.print("ALLWAYS", WIDTH/2, HEIGHT/2)
         --do return end
         love.graphics.print("TEST", WIDTH/2-10, HEIGHT/2-10)
     end
-    
 end
