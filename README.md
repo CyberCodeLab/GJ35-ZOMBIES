@@ -1,7 +1,3 @@
-## Summary
-1. [Description](#Description)
-2. [To Do](#To-Do)
-
 ## Description
 A zombie game for the [Gamecodeur Game Jam #35](https://itch.io/jam/gamecodeur-gamejam-35)
 
