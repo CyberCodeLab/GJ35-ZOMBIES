@@ -38,17 +38,21 @@ local ZOMBIES_STATES = require 'zombieStates'
 
 
 local renderScaleXY = 3 -- scale in x and y
-
-local lstSprites = {}
-lstSprites.animation = 5
-
-local totalZombie = 100
-local speedZombie = 200
-local zombieHitDamage = 0.1
-local zombieImgAlert = love.graphics.newImage("assets/alert.png");
-
 local showInfos = false
 local fps = 60
+
+LIST_SPRITES = {
+    ANIMATION = 5
+}
+
+ALL_ZOMBIES = {
+    TYPE = "zombie",
+    SPRITE = "monster", -- the complet path is auto completed by the function CreateSprite(). E.g "assets/<namefile>_<numberframe>.png"
+    SPRITE_ALERT = love.graphics.newImage("assets/alert.png"),
+    TOTAL = 100,
+    SPEED = 200,
+    DAMAGE = 0.1
+}
 
 function love.load()
 
@@ -60,11 +64,8 @@ function love.load()
     WINDOW_HEIGHT = love.graphics.getHeight() / renderScaleXY
 
     -- Init Characters
-    _player = CreatePlayer()
-    zombies = GenerateZombie(totalZombie)
-
-    -- Set game state
-
+    PLAYER = CreatePlayer()
+    GenerateZombie(ALL_ZOMBIES.TOTAL)
 
 end
 
@@ -74,9 +75,9 @@ function love.update(dt)
     dt = math.min(dt, 1/fps)
     --print(dt)
 
-    CheckPlayerInputs(_player, dt)
-    LimitPlayerScreen(_player)
-    UpdateSprites(lstSprites, lstSprites.animation, dt)
+    CheckPlayerInputs(PLAYER, dt)
+    LimitPlayerScreen(PLAYER)
+    UpdateSprites(LIST_SPRITES, LIST_SPRITES.ANIMATION, dt)
 
 end
 
@@ -89,11 +90,11 @@ function love.draw()
     love.graphics.setBackgroundColor(RGBColor(color.black))
 
     -- DRAW SPRITES
-    DrawSprites(lstSprites)
+    DrawSprites(LIST_SPRITES)
 
     -- DRAW TEXT
     love.graphics.rectangle("line",0,0,82,16)
-    love.graphics.print("Life = "..tostring(math.floor(_player.life)).."%", 4, 1)
+    love.graphics.print("Life = "..tostring(math.floor(PLAYER.life)).."%", 4, 1)
 
     love.graphics.pop()
 
@@ -105,6 +106,7 @@ function love.keypressed(_key)
     
     local keypressedEsc = "escape"
     local keypressedInfos = "i"
+    local keypressedReset = "r"
 
     if _key == keypressedEsc then
         love.event.quit()
@@ -113,6 +115,10 @@ function love.keypressed(_key)
 
     if _key == keypressedInfos then
        showInfos = showInfos ~= true
+    end
+
+    if _key == keypressedReset then
+        -- To do: reset the game
     end
     
 end
@@ -128,9 +134,12 @@ end
 
 function CreatePlayer()
 
-    local totalFramePlayer = 4
     local newPlayer = {}
-    newPlayer = CreateSprite(lstSprites, "human", "player", totalFramePlayer)
+    newPlayer.frames = 4
+    newPlayer.type = "human"
+    newPlayer.sprite = "player" -- -- the complet path is auto completed by the function CreateSprite(). E.g "assets/<namefile>_<numberframe>.png"
+
+    newPlayer = CreateSprite(LIST_SPRITES, newPlayer.type, newPlayer.sprite, newPlayer.frames)
     newPlayer.x = WINDOW_WIDTH / 2 -- center
     newPlayer.y = (WINDOW_HEIGHT / 6) * 5 -- Center down of 5/6 the screen
     newPlayer.speed = 200
@@ -138,9 +147,9 @@ function CreatePlayer()
     
     newPlayer.Hurt = 
     function ()
-        newPlayer.life = newPlayer.life - zombieHitDamage
+        newPlayer.life = newPlayer.life - ALL_ZOMBIES.DAMAGE
         --Game Over
-        if newPlayer.life <=0 then 
+        if newPlayer.life <=0 then
             newPlayer.life = 0
             newPlayer.visible = false
         end
@@ -181,14 +190,14 @@ function CreateZombie()
     local totalFrameZombie = 2
 
     local newZombie = {}
-    newZombie = CreateSprite(lstSprites, "zombie", "monster", totalFrameZombie)
+    newZombie = CreateSprite(LIST_SPRITES, ALL_ZOMBIES.TYPE , ALL_ZOMBIES.SPRITE, totalFrameZombie)
     newZombie.x = Random(10, WINDOW_WIDTH-10)
     newZombie.y = Random(10, (WINDOW_HEIGHT/2)-10)
 
-    newZombie.speed = Random(5,50) / speedZombie
+    newZombie.speed = Random(5,50) / ALL_ZOMBIES.SPEED
     newZombie.range = Random(10,150)
     newZombie.target = nil
-    newZombie.damage = zombieHitDamage
+    newZombie.damage = ALL_ZOMBIES.DAMAGE
 
     newZombie.state = ZOMBIES_STATES.NONE
 
@@ -199,7 +208,7 @@ function GenerateZombie(_totalZombie)
     local zombies = {}
 
     for i = 1, _totalZombie do
-        zombies.spawn = CreateZombie()
+        zombies = CreateZombie()
     end
 
     return zombies
@@ -224,11 +233,12 @@ function UpdateZombieStates(_zombie, _entities)
 
     elseif _zombie.state == ZOMBIES_STATES.ATTACK then
 
-        ZombieTrackTheTarget(_zombie, 5)
+        ZombieTrackTheTarget(_zombie, 5, PLAYER.type)
 
     elseif _zombie.state == ZOMBIES_STATES.BITE then
 
-        ZombieBiteTheTarget(_zombie, 5)
+        --print("BITE Player type: " .. PLAYER.TYPE)
+        ZombieBiteTheTarget(_zombie, 5, PLAYER.type)
         
     elseif _zombie.state == ZOMBIES_STATES.CHANGE_DIRRECTION then
         
@@ -246,8 +256,8 @@ function RandomZombieMove(_zombie)
     _zombie.state = ZOMBIES_STATES.WALK
 end
 
-function ZombieBiteTheTarget(_zombie, _rangeZone)
-    if DistanceBetweenTargetAndZombie(_zombie) > _rangeZone and _zombie.target.type == "human" then
+function ZombieBiteTheTarget(_zombie, _rangeZone, _targetType)
+    if DistanceBetweenTargetAndZombie(_zombie) > _rangeZone and _zombie.target.type == _targetType then
         _zombie.state = ZOMBIES_STATES.ATTACK
     else
         if _zombie.target.Hurt ~= nil then
@@ -259,14 +269,14 @@ function ZombieBiteTheTarget(_zombie, _rangeZone)
     end
 end
 
-function ZombieTrackTheTarget(_zombie, _rangeZone)
+function ZombieTrackTheTarget(_zombie, _rangeZone, _targetType)
     if _zombie.target == nil then
         _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
     elseif _zombie.target.visible == false then
         _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
-    elseif DistanceBetweenTargetAndZombie(_zombie) > _zombie.range and _zombie.target.type == "human" then
+    elseif DistanceBetweenTargetAndZombie(_zombie) > _zombie.range and _zombie.target.type == _targetType then
         _zombie.state = ZOMBIES_STATES.CHANGE_DIRRECTION
-    elseif DistanceBetweenTargetAndZombie(_zombie) < _rangeZone and _zombie.target.type == "human" then
+    elseif DistanceBetweenTargetAndZombie(_zombie) < _rangeZone and _zombie.target.type == _targetType then
         _zombie.state = ZOMBIES_STATES.BITE
         _zombie.speedX = 0
         _zombie.speedY = 0
@@ -307,7 +317,7 @@ end
 
 function ZombieAlertIcon(_sprite)
     if _sprite.state == ZOMBIES_STATES.ATTACK then
-        love.graphics.draw(zombieImgAlert, _sprite.x - zombieImgAlert:getWidth()/2, _sprite.y - _sprite.height - 2 )
+        love.graphics.draw(ALL_ZOMBIES.SPRITE_ALERT, _sprite.x - ALL_ZOMBIES.SPRITE_ALERT:getWidth()/2, _sprite.y - _sprite.height - 2 )
     end
 end
 
@@ -367,7 +377,7 @@ function UpdateSprites(_lstSprites, _speedFrame, _dt)
         sprite.y = sprite.y + sprite.speedY * _dt
 
         -- AI
-        if sprite.type == "zombie" then
+        if sprite.type == ALL_ZOMBIES.TYPE then
             UpdateZombieStates(sprite, _lstSprites)
         end
 
@@ -379,7 +389,7 @@ function DrawSprites(_lstSprites)
         if sprite.visible == true then
             local frame = sprite.images[math.floor(sprite.currentFrame)]
             love.graphics.draw(frame, sprite.x - sprite.width / 2, sprite.y - sprite.height / 2)
-            if sprite.type == "zombie" then
+            if sprite.type == ALL_ZOMBIES.TYPE then
                 StateInfos(sprite)
                 ZombieAlertIcon(sprite)
             end
@@ -404,7 +414,7 @@ end
 
 -- Returns the angle between two vectors assuming the same origin.
 function math.angle(_x1,_y1, _x2,_y2)
-    return math.atan2(_y2-_y1, _x2-_x1)
+    return math.atan2(_y2-_y1, _x2-_x1) --arc tangeante
 end
 
 -- Returns the distance between two points.
