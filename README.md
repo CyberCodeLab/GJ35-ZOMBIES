@@ -19,4 +19,4 @@ Using the [Love 2D Framework](https://love2d.org) only
 - [x] Zombie alert icon
 - [ ] keyboard shortcut to restart
 - [ ] Menus (home, pause, game over, buttons)
-- [ ] Create an executable
+- [x] Create an executable
