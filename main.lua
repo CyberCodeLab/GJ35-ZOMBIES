@@ -45,11 +45,11 @@ local LIST_SPRITES = { ANIMATION = 5 }
 
 local ALL_ZOMBIES = {
     TYPE = 'zombie',
-    SPRITE = 'monster', -- the complet path is auto completed by the function CreateSprite(). E.g 'assets/<namefile>_<numberframe>.png'
-    SPRITE_ALERT = love.graphics.newImage(ASSETS_SOURCE..'alert'..FORMART.png),
+    SPRITE = 'zombie', -- the complet path is auto completed by the function CreateSprite(). E.g 'assets/<namefile>_<numberframe>.png'
+    SPRITE_ALERT = love.graphics.newImage(ASSETS_SOURCE..'red_alert'..FORMART.png),
     SPRITE_BITE = love.graphics.newImage(ASSETS_SOURCE..'bite'..FORMART.png),
     RANDOM_BITE_POSITION = 5,
-    TOTAL_SPAWN = 3,
+    TOTAL_SPAWN = 100,
     SPEED = 200,
     DAMAGE = 0.1
 }
@@ -84,7 +84,7 @@ function love.draw()
     
     -- DRAW PARAMS
     love.graphics.scale(renderScaleXY, renderScaleXY)
-    love.graphics.setBackgroundColor(RGBColor(color.black))
+    love.graphics.setBackgroundColor(RGBColor(color.darkGrey))
 
     -- DRAW SPRITES
     DrawCharacterSprites(LIST_SPRITES)
@@ -173,7 +173,7 @@ function CreatePlayer()
     local newPlayer = {}
     newPlayer.frames = 4
     newPlayer.type = 'human'
-    newPlayer.sprite = 'player' -- -- the complet path is auto completed by the function CreateSprite(). E.g 'assets/<namefile>_<numberframe>.png'
+    newPlayer.sprite = 'human' -- -- the complet path is auto completed by the function CreateSprite(). E.g 'assets/<namefile>_<numberframe>.png'
 
     newPlayer = CreateCharacterSprite(LIST_SPRITES, newPlayer.type, newPlayer.sprite, newPlayer.frames)
     newPlayer.x = WINDOW_WIDTH / 2 -- center
