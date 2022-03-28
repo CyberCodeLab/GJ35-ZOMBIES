@@ -37,9 +37,10 @@ local ZOMBIES_STATES = require 'zombieStates'
 ]]
 
 
-local FORMART = {png = '.png', jpeg = '.jpeg'}
+local FORMART = {png = '.png', jpeg = '.jpeg', ttf = '.ttf'}
 local ASSETS_SOURCE = 'assets/'
 local FPS = 60
+local FONT = love.graphics.newFont(ASSETS_SOURCE..'space_madness'..FORMART.ttf, 18)
 
 local LIST_SPRITES = { ANIMATION = 5 }
 
@@ -85,15 +86,18 @@ function love.draw()
     -- DRAW PARAMS
     love.graphics.scale(renderScaleXY, renderScaleXY)
     love.graphics.setBackgroundColor(RGBColor(color.darkGrey))
-
+    
     -- DRAW SPRITES
     DrawCharacterSprites(LIST_SPRITES)
     --DrawMenu(MAIN_MENU)
 
     -- DRAW TEXT
-    love.graphics.rectangle('line',0,0,82,16)
+    love.graphics.setFont(FONT)
+    FONT:setFilter( "nearest", "nearest" )
+    love.graphics.rectangle('line',0,0,90,16)
     love.graphics.print('Life = '..tostring(math.floor(PLAYER.life))..'%', 4, 1)
     
+    --DRAW RESET
     if inputResetDraw == true then
         love.graphics.clear()
         inputResetDraw = false
