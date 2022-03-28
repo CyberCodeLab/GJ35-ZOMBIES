@@ -17,6 +17,7 @@ Using the [Love 2D Framework](https://love2d.org) only
 - [x] Zombies Attack The Player
 - [x] Animate Zombies
 - [x] Zombie alert icon
+- [x] Visual changes
 - [ ] keyboard shortcut to restart
 - [ ] Menus (home, pause, game over, buttons)
 - [x] Create an executable
