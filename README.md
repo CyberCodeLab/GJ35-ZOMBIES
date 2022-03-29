@@ -18,6 +18,7 @@ Using the [Love 2D Framework](https://love2d.org) only
 - [x] Animate Zombies
 - [x] Zombie alert icon
 - [x] Visual changes
+- [x] Add [font](https://modernmodron.itch.io/space-madness) 
 - [ ] keyboard shortcut to restart
 - [ ] Menus (home, pause, game over, buttons)
 - [x] Create an executable
